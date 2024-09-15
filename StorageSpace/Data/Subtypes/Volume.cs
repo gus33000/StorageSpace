@@ -75,8 +75,54 @@ namespace StorageSpace.Data.Subtypes
             byte dataLength = reader.ReadByte();
             byte[] VolumeNumber = reader.ReadBytes(dataLength);
 
+            bool IsAncientVersion = false;
+
+            long currentPosition = stream.Position;
+
             dataLength = reader.ReadByte();
-            byte[] CommandSerialNumber = reader.ReadBytes(dataLength);
+
+            if (dataLength != 1)
+            {
+                if (stream.Position + dataLength + 16 + 2 > stream.Length)
+                {
+                    // Old version
+                    IsAncientVersion = true;
+                }
+                else
+                {
+                    stream.Seek(dataLength + 16, SeekOrigin.Current);
+                    ushort sizeVal = reader.ReadUInt16();
+                    sizeVal = (ushort)((sizeVal & 0xFF00) >> 8 | (sizeVal & 0xFF) << 8);
+
+                    if (stream.Position + sizeVal * 2 > stream.Length)
+                    {
+                        // Old version
+                        IsAncientVersion = true;
+                    }
+                    else
+                    {
+                        if (dataLength != 0)
+                        {
+                            // Old version
+                            IsAncientVersion = true;
+                        }
+                        else
+                        {
+                            // New version, we are fine.
+                        }
+                    }
+                }
+            }
+
+            stream.Seek(currentPosition, SeekOrigin.Begin);
+
+            byte[] CommandSerialNumber = [0x00];
+
+            if (!IsAncientVersion)
+            {
+                dataLength = reader.ReadByte();
+                CommandSerialNumber = reader.ReadBytes(dataLength);
+            }
 
             Guid VolumeGUID = new(reader.ReadBytes(16));
 
