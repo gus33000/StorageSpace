@@ -148,10 +148,6 @@ namespace StorageSpace
                 }
             }
 
-            SDBBVolumes = [.. SDBBVolumes.OrderBy(x => x.VolumeNumber)];
-            SDBBSlabAllocation = [.. SDBBSlabAllocation.OrderBy(x => x.VolumeBlockNumber)];
-            SDBBSlabAllocation = [.. SDBBSlabAllocation.OrderBy(x => x.VolumeID)];
-
             Stream.Seek(OriginalSeekPosition, SeekOrigin.Begin);
         }
 

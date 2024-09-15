@@ -153,41 +153,69 @@ namespace StorageSpace
                 readBytes = (int)(Length - Position);
             }
 
-            // Read the buffer from the FFU file.
-            // First we have to figure out where do we land here.
-
+            // The number of bytes that do not line up with the size of blocks (blockSize) at the beginning
             long overflowBlockStartByteCount = Position % blockSize;
+
+            // The number of bytes that do not line up with the size of blocks (blockSize) at the end
             long overflowBlockEndByteCount = (Position + readBytes) % blockSize;
 
-            int startBlockIndex = (int)((Position - overflowBlockStartByteCount) / blockSize);
-            int endBlockIndex = (int)((Position + readBytes + (blockSize - overflowBlockEndByteCount)) / blockSize);
+            // The position to start reading from, aligned to the size of blocks (blockSize)
+            long noOverflowBlockStartByteCount = Position - overflowBlockStartByteCount;
 
-            for (int currentBlock = startBlockIndex; currentBlock < endBlockIndex; currentBlock++)
+            // The number of extra bytes to read at the start
+            long extraStartBytes = blockSize - overflowBlockStartByteCount;
+
+            // The number of extra bytes to read at the end
+            long extraEndBytes = blockSize - overflowBlockEndByteCount;
+
+            // The position to end reading from, aligned to the size of blocks (blockSize) (excluding)
+            long noOverflowBlockEndByteCount = Position + readBytes + extraEndBytes;
+
+            // The first block we have to read
+            long startBlockIndex = noOverflowBlockStartByteCount / blockSize;
+
+            // The last block we have to read (excluding)
+            long endBlockIndex = noOverflowBlockEndByteCount / blockSize;
+
+            // Go through every block one by one
+            for (long currentBlock = startBlockIndex; currentBlock < endBlockIndex; currentBlock++)
             {
-                int virtualBlockIndex = GetBlockDataIndex(currentBlock);
+                bool isFirstBlock = currentBlock == startBlockIndex;
+                bool isLastBlock = currentBlock == endBlockIndex - 1;
+
+                long bytesToRead = blockSize;
+                long bufferDestination = extraStartBytes + (currentBlock - startBlockIndex - 1) * blockSize;
+
+                if (isFirstBlock)
+                {
+                    bytesToRead = extraStartBytes;
+                    bufferDestination = 0;
+                }
+
+                if (isLastBlock)
+                {
+                    bytesToRead -= extraEndBytes;
+                }
+
+                int virtualBlockIndex = GetBlockDataIndex((int)currentBlock);
+
                 if (virtualBlockIndex != -1)
                 {
+                    // The block exists
                     long physicalDiskLocation = ImageGetStoreDataBlockOffset(virtualBlockIndex);
 
-                    long bytesToRead = blockSize;
-                    long bufferDestination = (blockSize - overflowBlockStartByteCount) + (currentBlock - startBlockIndex - 1) * blockSize;
-
-                    if (currentBlock == startBlockIndex)
+                    if (isFirstBlock)
                     {
-                        bytesToRead = blockSize - overflowBlockStartByteCount;
                         physicalDiskLocation += overflowBlockStartByteCount;
-                        bufferDestination = 0;
                     }
-
-                    if (currentBlock == endBlockIndex - 1)
-                    {
-                        bytesToRead -= blockSize - overflowBlockEndByteCount;
-                    }
-
-                    byte[] block = new byte[bytesToRead];
 
                     Stream.Seek(OriginalSeekPosition + physicalDiskLocation, SeekOrigin.Begin);
-                    Stream.Read(buffer, (int)bufferDestination, block.Length);
+                    Stream.Read(buffer, offset + (int)bufferDestination, (int)bytesToRead);
+                }
+                else
+                {
+                    // The block does not exist in the pool, fill the area with 00s instead
+                    Array.Fill<byte>(buffer, 0, offset + (int)bufferDestination, (int)bytesToRead);
                 }
             }
 
