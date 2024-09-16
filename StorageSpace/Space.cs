@@ -221,6 +221,45 @@ namespace StorageSpace
             return (int)readBytes;
         }
 
+        public void CopyTo(Stream DestinationStream, Action<ulong, ulong> ProgressCallBack)
+        {
+            long OriginalDestinationStreamPosition = DestinationStream.Position;
+
+            ulong totalBytes = (uint)slabAllocations.Count * (ulong)blockSize * 2u;
+
+            ProgressCallBack?.Invoke(0, totalBytes);
+
+            ulong currentWrittenBytes = 0;
+
+            for (int i = 0; i < slabAllocations.Count; i++)
+            {
+                SlabAllocation slabAllocation = slabAllocations[i];
+                long virtualDiskBlockNumber = slabAllocation.VolumeBlockNumber;
+                long physicalDiskBlockNumber = slabAllocation.PhysicalDiskBlockNumber;
+
+                long virtualPosition = virtualDiskBlockNumber * blockSize;
+                long physicalPosition = ImageGetStoreDataBlockOffset(physicalDiskBlockNumber);
+
+                Stream.Seek(OriginalSeekPosition + physicalPosition, SeekOrigin.Begin);
+                DestinationStream.Seek(OriginalDestinationStreamPosition + virtualPosition, SeekOrigin.Begin);
+
+                // Block Size is a multiple of 4096
+                ulong chunkSize = (ulong)blockSize;
+                for (ulong j = 0; j < (ulong)blockSize; j += chunkSize)
+                {
+                    byte[] buffer = new byte[chunkSize];
+
+                    Stream.Read(buffer);
+                    currentWrittenBytes += chunkSize;
+                    ProgressCallBack?.Invoke(currentWrittenBytes, totalBytes);
+
+                    DestinationStream.Write(buffer);
+                    currentWrittenBytes += chunkSize;
+                    ProgressCallBack?.Invoke(currentWrittenBytes, totalBytes);
+                }
+            }
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)
