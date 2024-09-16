@@ -151,9 +151,9 @@ namespace StorageSpace
             Stream.Seek(OriginalSeekPosition, SeekOrigin.Begin);
         }
 
-        public Dictionary<int, string> GetDisks()
+        public Dictionary<long, string> GetDisks()
         {
-            Dictionary<int, string> disks = [];
+            Dictionary<long, string> disks = [];
 
             foreach (Volume SDBBVolume in SDBBVolumes)
             {
@@ -163,7 +163,7 @@ namespace StorageSpace
             return disks;
         }
 
-        public Space OpenDisk(int storeIndex)
+        public Space OpenDisk(long storeIndex)
         {
             return new Space(Stream, storeIndex, this, OriginalSeekPosition, IsAncientFormat);
         }

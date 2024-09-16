@@ -5,13 +5,13 @@ namespace StorageSpace.Data.Subtypes
 {
     public partial class Volume
     {
-        public int VolumeNumber
+        public long VolumeNumber
         {
             get;
             private set;
         }
 
-        public int CommandSerialNumber
+        public long CommandSerialNumber
         {
             get;
             private set;
@@ -35,7 +35,7 @@ namespace StorageSpace.Data.Subtypes
             private set;
         }
 
-        public int VolumeBlockNumber
+        public long VolumeBlockNumber
         {
             get;
             private set;
@@ -113,7 +113,7 @@ namespace StorageSpace.Data.Subtypes
             dataLength = reader.ReadByte();
             byte[] VolumeBlockNumber = reader.ReadBytes(dataLength);
 
-            int ParsedVolumeBlockNumber = BigEndianToInt(VolumeBlockNumber.Take(dataLength).ToArray());
+            long ParsedVolumeBlockNumber = BigEndianToInt(VolumeBlockNumber.Take(dataLength).ToArray());
 
             dataLength = reader.ReadByte();
             byte[] DataValue2 = reader.ReadBytes(dataLength);
@@ -201,7 +201,7 @@ namespace StorageSpace.Data.Subtypes
             dataLength = reader.ReadByte();
             byte[] VolumeBlockNumber = reader.ReadBytes(dataLength);
 
-            int ParsedVolumeBlockNumber = BigEndianToInt(VolumeBlockNumber.Take(dataLength).ToArray());
+            long ParsedVolumeBlockNumber = BigEndianToInt(VolumeBlockNumber.Take(dataLength).ToArray());
 
             dataLength = reader.ReadByte();
             byte[] DataValue2 = reader.ReadBytes(dataLength);
@@ -328,10 +328,10 @@ namespace StorageSpace.Data.Subtypes
             }
         }
 
-        private static int BigEndianToInt(byte[] buf)
+        private static long BigEndianToInt(byte[] buf)
         {
-            int val = 0;
-            for (int i = 0; i < buf.Length; i++)
+            long val = 0;
+            for (long i = 0; i < buf.Length; i++)
             {
                 val *= 0x100;
                 val += buf[i];

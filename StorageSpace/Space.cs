@@ -12,13 +12,13 @@ namespace StorageSpace
 
         private long blockSize => IsAncientFormat ? 0x10000000 : 0x100000;
 
-        private readonly Dictionary<int, int> blockTable;
+        private readonly Dictionary<long, long> blockTable;
         private readonly List<SlabAllocation> slabAllocations = [];
-        private readonly int TotalBlocks;
+        private readonly long TotalBlocks;
 
         private long currentPosition = 0;
 
-        internal Space(Stream Stream, int storeIndex, Pool storageSpace, long OriginalSeekPosition, bool IsAncientFormat)
+        internal Space(Stream Stream, long storeIndex, Pool storageSpace, long OriginalSeekPosition, bool IsAncientFormat)
         {
             this.IsAncientFormat = IsAncientFormat;
             this.OriginalSeekPosition = OriginalSeekPosition;
@@ -55,35 +55,26 @@ namespace StorageSpace
 
         public override long Length => length;
 
-        private (long, Dictionary<int, int>) BuildBlockTable()
+        private (long, Dictionary<long, long>) BuildBlockTable()
         {
-            Dictionary<int, int> blockTable = [];
+            Dictionary<long, long> blockTable = [];
 
-            long blockSize = IsAncientFormat ? this.blockSize : 0x10000000;
-
-            int maxVirtualDiskBlockNumber = 0;
+            long blockSize = IsAncientFormat ? this.blockSize : 1;
 
             foreach (SlabAllocation slabAllocation in slabAllocations)
             {
-                int virtualDiskBlockNumber = slabAllocation.VolumeBlockNumber;
-                int physicalDiskBlockNumber = slabAllocation.PhysicalDiskBlockNumber;
-
-                if (virtualDiskBlockNumber > maxVirtualDiskBlockNumber)
-                {
-                    maxVirtualDiskBlockNumber = virtualDiskBlockNumber;
-                }
+                long virtualDiskBlockNumber = slabAllocation.VolumeBlockNumber;
+                long physicalDiskBlockNumber = slabAllocation.PhysicalDiskBlockNumber;
 
                 blockTable.Add(virtualDiskBlockNumber, physicalDiskBlockNumber);
             }
 
-            long totalBlocks = Math.Max(TotalBlocks, maxVirtualDiskBlockNumber);
-
-            return (totalBlocks * blockSize, blockTable);
+            return (TotalBlocks * blockSize, blockTable);
         }
 
-        private int GetBlockDataIndex(int realBlockOffset)
+        private long GetBlockDataIndex(long realBlockOffset)
         {
-            if (blockTable.TryGetValue(realBlockOffset, out int value))
+            if (blockTable.TryGetValue(realBlockOffset, out long value))
             {
                 return value;
             }
@@ -116,7 +107,7 @@ namespace StorageSpace
             // Nothing to do here
         }
 
-        private long ImageGetStoreDataBlockOffset(int physicalDiskBlockNumber) => IsAncientFormat ? ((long)physicalDiskBlockNumber + 2) * blockSize : physicalDiskBlockNumber * blockSize + 0x2000 + 0x4000000;
+        private long ImageGetStoreDataBlockOffset(long physicalDiskBlockNumber) => IsAncientFormat ? ((long)physicalDiskBlockNumber + 2) * blockSize : physicalDiskBlockNumber * blockSize + 0x2000 + 0x4000000;
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -197,7 +188,7 @@ namespace StorageSpace
                     bytesToRead -= extraEndBytes;
                 }
 
-                int virtualBlockIndex = GetBlockDataIndex((int)currentBlock);
+                long virtualBlockIndex = GetBlockDataIndex(currentBlock);
 
                 if (virtualBlockIndex != -1)
                 {

@@ -2,45 +2,45 @@
 {
     public class SlabAllocation
     {
-        public int VolumeID
+        public long VolumeID
         {
             get;
             private set;
         }
 
-        public int VolumeBlockNumber
+        public long VolumeBlockNumber
         {
             get;
             private set;
         }
 
-        public int ParitySequenceNumber
+        public long ParitySequenceNumber
         {
             get;
             private set;
         }
 
-        public int MirrorSequenceNumber
+        public long MirrorSequenceNumber
         {
             get;
             private set;
         }
 
-        public int PhysicalDiskID
+        public long PhysicalDiskID
         {
             get;
             private set;
         }
 
-        public int PhysicalDiskBlockNumber
+        public long PhysicalDiskBlockNumber
         {
             get;
             private set;
         }
 
-        private static int BigEndianToInt(byte[] buf)
+        private static long BigEndianToInt(byte[] buf)
         {
-            int val = 0;
+            long val = 0;
             for (int i = 0; i < buf.Length; i++)
             {
                 val *= 0x100;
@@ -72,25 +72,25 @@
             byte[] DataValue5 = reader.ReadBytes(dataLength);
 
             dataLength = reader.ReadByte();
-            int VolumeID = BigEndianToInt(reader.ReadBytes(dataLength));
+            long VolumeID = BigEndianToInt(reader.ReadBytes(dataLength));
 
             dataLength = reader.ReadByte();
-            int VolumeBlockNumber = BigEndianToInt(reader.ReadBytes(dataLength));
+            long VolumeBlockNumber = BigEndianToInt(reader.ReadBytes(dataLength));
 
             dataLength = reader.ReadByte();
-            int ParitySequenceNumber = BigEndianToInt(reader.ReadBytes(dataLength));
+            long ParitySequenceNumber = BigEndianToInt(reader.ReadBytes(dataLength));
 
             dataLength = reader.ReadByte();
-            int MirrorSequenceNumber = BigEndianToInt(reader.ReadBytes(dataLength));
+            long MirrorSequenceNumber = BigEndianToInt(reader.ReadBytes(dataLength));
 
             dataLength = reader.ReadByte();
             byte[] DataValue6 = reader.ReadBytes(dataLength);
 
             dataLength = reader.ReadByte();
-            int PhysicalDiskID = BigEndianToInt(reader.ReadBytes(dataLength));
+            long PhysicalDiskID = BigEndianToInt(reader.ReadBytes(dataLength));
 
             dataLength = reader.ReadByte();
-            int PhysicalDiskBlockNumber = BigEndianToInt(reader.ReadBytes(dataLength));
+            long PhysicalDiskBlockNumber = BigEndianToInt(reader.ReadBytes(dataLength));
 
             SlabAllocation slabAllocation = new()
             {
