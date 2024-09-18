@@ -76,7 +76,7 @@ namespace StorageSpace
 
             if (SDBC.StorageGUID != SPACEDB.StorageGUID)
             {
-                throw new Exception("Invalid OSPool! SDBC is not for the given SpaceDB!");
+                //throw new Exception("Invalid OSPool! SDBC is not for the given SpaceDB!");
             }
 
             int SDBBChainStartPosition = SDBCStartPosition + SDBC.SDBCLength;
